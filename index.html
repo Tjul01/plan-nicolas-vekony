@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Badminton — Nicolas</title>
+<meta name="description" content="Plan d'entraînement badminton personnalisé — Nicolas · Saison 2026–27">
+<meta name="theme-color" content="#0f110e">
+<link rel="manifest" href="manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
+:root{
+  --bg:#0f110e;--bg2:#171a15;--bg3:#1e2219;--border:#2a2f27;--border2:#353b31;
+  --text:#e8ead5;--text2:#9aa08a;--text3:#5c6354;
+  --green:#7eb87a;--green2:#4a8a46;--amber:#c8a96e;--amber2:#8a6030;
+  --red:#c47a6a;--blue:#7a9ec8;--blue2:#185FA5;--purple:#a87ac8;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;min-height:100vh;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:300;}
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:340px;text-align:center;}
+.login-title{font-family:'Fraunces',serif;font-size:22px;color:var(--text);margin-bottom:4px;}
+.login-sub{font-size:11px;color:var(--text3);margin-bottom:1.5rem;letter-spacing:.05em;text-transform:uppercase;}
+.pin-display{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem;}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);transition:all .15s;}
+.pin-dot.filled{background:var(--green);border-color:var(--green);}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto 1rem;}
+.pin-btn{padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;font-size:16px;transition:all .15s;}
+.pin-btn:hover{border-color:var(--border2);background:var(--bg2);}
+.pin-error{font-size:11px;color:var(--red);margin-top:8px;min-height:16px;}
+.app-wrap{display:none;min-height:100vh;flex-direction:column;}
+.app-wrap.visible{display:flex;}
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.app-title{font-family:'Fraunces',serif;font-size:18px;color:var(--text);}
+.role-badge{font-size:10px;font-weight:500;padding:3px 10px;border-radius:999px;letter-spacing:.05em;}
+.role-athlete{background:#1a2e18;color:var(--green);border:1px solid var(--green2);}
+.role-coach{background:#1a1f2e;color:var(--blue);border:1px solid var(--blue2);}
+.logout-btn{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px 8px;}
+.logout-btn:hover{color:var(--text);}
+.nav{display:flex;gap:4px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.nav-btn{padding:6px 12px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all .15s;}
+.nav-btn:hover{border-color:var(--border2);color:var(--text);}
+.nav-btn.active{background:var(--green2);border-color:var(--green);color:var(--text);}
+.nav-btn.coach-tab{border-color:var(--blue2);color:var(--blue);}
+.nav-btn.coach-tab.active{background:var(--blue2);border-color:var(--blue);color:var(--text);}
+.main{flex:1;padding:16px;overflow-y:auto;}
+.page{display:none;}.page.active{display:block;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+.card-title{font-family:'Fraunces',serif;font-weight:300;font-size:15px;color:var(--text);margin-bottom:10px;}
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.month-name{font-family:'Fraunces',serif;font-size:18px;font-weight:300;flex:1;}
+.cal-btn{width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.cal-btn:hover{border-color:var(--border2);color:var(--text);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-hdr{font-size:10px;color:var(--text3);text-align:center;padding:3px 0;}
+.cal-day{border-radius:4px;border:.5px solid var(--border);background:var(--bg3);min-height:44px;padding:3px;cursor:pointer;transition:all .1s;}
+.cal-day:hover{border-color:var(--border2);}
+.cal-day.empty{background:transparent;border-color:transparent;cursor:default;}
+.cal-day.today{border-color:var(--green);}
+.cal-day.done{background:#1a2e18;border-color:var(--green2);}
+.cal-day.skipped{background:#2e1a18;border-color:var(--red);opacity:.7;}
+.cal-day.conge{background:#1a1f2e;border-color:var(--blue);opacity:.6;}
+.cal-dn{font-size:9px;color:var(--text3);text-align:right;margin-bottom:1px;}
+.cal-dot{width:5px;height:5px;border-radius:50%;margin:1px auto 0;}
+.session-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:.5px solid var(--border);}
+.s-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-family:'Fraunces',serif;font-size:17px;font-weight:300;margin-bottom:14px;}
+.modal-close{float:right;background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;margin-top:-4px;}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.04em;text-transform:uppercase;}
+.form-row{margin-bottom:12px;}
+.status-btns{display:flex;gap:6px;}
+.status-btn{flex:1;padding:7px 4px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;text-align:center;transition:all .15s;}
+.status-btn.sel-done{background:#1a2e18;border-color:var(--green);color:var(--green);}
+.status-btn.sel-skipped{background:#2e1a18;border-color:var(--red);color:var(--red);}
+.status-btn.sel-moved{background:#2a2218;border-color:var(--amber);color:var(--amber);}
+.rpe-val{text-align:center;font-size:22px;font-family:'Fraunces',serif;color:var(--green);margin:4px 0;}
+.rpe-slider{width:100%;accent-color:var(--green);}
+.rpe-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:2px;}
+textarea,input[type=text],input[type=number],input[type=password]{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;}
+textarea{resize:vertical;min-height:60px;}
+textarea:focus,input:focus{outline:none;border-color:var(--border2);}
+.btn{padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;transition:all .15s;border:1px solid;}
+.btn-primary{background:var(--green2);border-color:var(--green2);color:var(--text);width:100%;margin-top:8px;}
+.btn-primary:hover{background:var(--green);}
+.btn-blue{background:var(--blue2);border-color:var(--blue2);color:var(--text);width:100%;margin-top:8px;}
+.btn-blue:hover{background:var(--blue);}
+.btn-danger{background:#3a1a18;border-color:var(--red);color:var(--red);font-size:11px;padding:6px 12px;}
+.poids-form{display:flex;gap:8px;margin-bottom:12px;}
+.poids-input{flex:1;font-size:16px;}
+.btn-add{padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--green2);background:var(--green2);color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;}
+.poids-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;text-align:center;}
+.stat-val{font-family:'Fraunces',serif;font-size:18px;color:var(--text);}
+.stat-label{font-size:10px;color:var(--text3);margin-top:1px;}
+.traject{font-size:11px;padding:7px 10px;border-radius:var(--radius-sm);margin-top:8px;line-height:1.5;}
+.t-ok{background:#1a2e18;border:1px solid var(--green2);color:var(--green);}
+.t-warn{background:#2e2518;border:1px solid var(--amber);color:var(--amber);}
+.t-alert{background:#2e1a18;border:1px solid var(--red);color:var(--red);}
+.analyse-result{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:80px;line-height:1.7;font-size:12px;color:var(--text2);}
+.analyse-result.loading{color:var(--text3);font-style:italic;}
+.analyse-result.error{color:var(--red);border-color:var(--red);}
+.data-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+.message-box{background:var(--bg3);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;}
+.message-from{font-size:10px;color:var(--amber);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.message-text{font-size:12px;color:var(--text);line-height:1.5;}
+.message-date{font-size:10px;color:var(--text3);margin-top:4px;}
+.edit-session-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+.edit-session-card:hover{border-color:var(--border2);}
+.esc-date{font-size:11px;color:var(--text3);}
+.esc-name{font-size:12px;color:var(--text);margin:2px 0;}
+.esc-detail{font-size:11px;color:var(--text2);}
+.coach-badge{font-size:9px;background:#1a1f2e;color:var(--blue);border:1px solid var(--blue2);padding:2px 6px;border-radius:3px;margin-left:6px;}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:.5px solid var(--border);}
+.settings-row:first-child{border-top:none;}
+.settings-label{font-size:12px;color:var(--text);}
+.settings-sub{font-size:10px;color:var(--text3);}
+.hist-item{padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;}
+.hist-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+.hist-date{font-size:11px;color:var(--text3);}
+.hist-rpe{font-family:'Fraunces',serif;font-size:15px;}
+.hist-note{font-size:11px;color:var(--text2);margin-top:4px;font-style:italic;}
+.sb{font-size:9px;padding:1px 6px;border-radius:3px;}
+.sb-done{background:#1a2e18;color:var(--green);}
+.sb-skipped{background:#2e1a18;color:var(--red);}
+.sb-moved{background:#2a2218;color:var(--amber);}
+.empty{text-align:center;color:var(--text3);padding:24px;font-style:italic;}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);}
+.leg-dot{width:8px;height:8px;border-radius:2px;}
+.ex-item{padding:7px 0;border-top:.5px solid var(--border);}
+.ex-item:first-child{border-top:none;}
+.ex-name{font-size:12px;color:var(--text);margin-bottom:3px;}
+.ex-detail{font-size:11px;color:var(--text3);}
+.ex-cue{font-size:10px;color:var(--text2);margin-top:3px;padding:3px 6px;background:var(--bg3);border-radius:3px;line-height:1.4;}
+.phase-hdr{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:5px 0;border-bottom:.5px solid var(--border);margin-bottom:6px;}
+@media(max-width:480px){.main{padding:10px;}}
+</style>
+</head>
+<body>
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <h1 class="login-title">Plan Badminton</h1>
+    <div class="login-sub">Nicolas · Saison 2026–27</div>
+    <div class="pin-display">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinPress('del')">⌫</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" onclick="pinPress('ok')">OK</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div style="font-size:10px;color:var(--text3);margin-top:12px;line-height:1.6;">
+      Athlète : PIN par défaut <b style="color:var(--green)">1234</b><br>
+      Coach : PIN par défaut <b style="color:var(--blue)">9999</b>
+    </div>
+  </div>
+</div>
+<div class="app-wrap" id="app-wrap">
+  <div class="app-header">
+    <h1 class="app-title">Plan Badminton</h1>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="role-badge" id="role-badge"></span>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+  <div class="nav" id="main-nav"></div>
+  <div class="main" id="main-content"></div>
+</div>
+<div class="modal-overlay hidden" id="modal-session">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-session')">×</button>
+    <div class="modal-title" id="ms-title">Séance</div>
+    <div class="form-row">
+      <label class="form-label">Statut</label>
+      <div class="status-btns">
+        <button class="status-btn" id="ms-done" onclick="setStatus('done')">✓ Faite</button>
+        <button class="status-btn" id="ms-skipped" onclick="setStatus('skipped')">✕ Supprimée</button>
+        <button class="status-btn" id="ms-moved" onclick="setStatus('moved')">→ Déplacée</button>
+      </div>
+    </div>
+    <div class="form-row" id="ms-rpe-row">
+      <label class="form-label">Effort (RPE)</label>
+      <div class="rpe-val" id="ms-rpe-val">6</div>
+      <input type="range" class="rpe-slider" id="ms-rpe" min="1" max="10" value="6" oninput="document.getElementById('ms-rpe-val').textContent=this.value">
+      <div class="rpe-labels"><span>1 très léger</span><span>5 modéré</span><span>10 max</span></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Sensations · notes</label>
+      <textarea id="ms-notes" placeholder="Achille OK, bonne énergie..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="saveSessionLog()">Enregistrer</button>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="modal-edit-session">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-edit-session')">×</button>
+    <div class="modal-title" id="mes-title">Modifier la séance</div>
+    <input type="hidden" id="mes-date"><input type="hidden" id="mes-idx">
+    <div class="form-row"><label class="form-label">Intitulé</label><input type="text" id="mes-label"></div>
+    <div class="form-row"><label class="form-label">Détail / charge</label><input type="text" id="mes-detail"></div>
+    <div class="form-row">
+      <label class="form-label">Note coach (visible par Nicolas)</label>
+      <textarea id="mes-coach-note" placeholder="Augmenter la charge si RPE < 6..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="saveEditSession()">Sauvegarder et pousser</button>
+    <button class="btn btn-danger" style="width:100%;margin-top:6px;" onclick="deleteSession()">Supprimer cette séance</button>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="modal-add-session">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-session')">×</button>
+    <div class="modal-title">Ajouter une séance</div>
+    <div class="form-row"><label class="form-label">Date</label><input type="text" id="mas-date" placeholder="2026-09-01"></div>
+    <div class="form-row">
+      <label class="form-label">Type</label>
+      <select id="mas-type" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;">
+        <option value="force">Force</option><option value="kb">Force KB</option>
+        <option value="cardio">Cardio</option><option value="mob">Mobilité</option>
+        <option value="bad">Badminton</option><option value="repos">Repos</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Intitulé</label><input type="text" id="mas-label" placeholder="KB Force A · parking"></div>
+    <div class="form-row"><label class="form-label">Détail</label><input type="text" id="mas-detail" placeholder="Swing 16kg + gobelet · 40 min"></div>
+    <button class="btn btn-primary" onclick="addNewSession()">Ajouter au calendrier</button>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="modal-message">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-message')">×</button>
+    <div class="modal-title">Message à Nicolas</div>
+    <div class="form-row">
+      <textarea id="msg-text" placeholder="Super semaine ! Pour jeudi, essaie le swing à 20 kg..." style="min-height:100px;"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="sendMessage()">Envoyer à Nicolas</button>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
