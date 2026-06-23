@@ -1,17 +1,98 @@
 // ═══════════════════════════════════════════════════════════════
 // PLAN BADMINTON NICOLAS — app.js
+// Backend : Supabase (données partagées en temps réel)
 // PIN Athlète : 1234 | PIN Coach : 9999 (modifiables dans Réglages)
 // ═══════════════════════════════════════════════════════════════
 
+// ── SUPABASE CONFIG ───────────────────────────────────────────
+const SUPABASE_URL = 'https://zuxkbilztknthcsfulyk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_qWhizpkvYsJqQdChH-Od8A_6KPIjoRC';
+
+// Hash SHA-256 pour PIN
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Appel Supabase générique
+async function sb(method, table, body = null, params = '') {
+  const url = `${SUPABASE_URL}/rest/v1/${table}${params}`;
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=representation' : 'return=representation'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    const err = await r.text();
+    throw new Error(`Supabase ${method} ${table}: ${err}`);
+  }
+  const text = await r.text();
+  return text ? JSON.parse(text) : null;
+}
+
+const DB = {
+  // Session logs
+  async getLogs() {
+    const rows = await sb('GET', 'session_logs', null, '?select=*');
+    const out = {};
+    (rows || []).forEach(r => { out[r.date] = { status: r.status, rpe: r.rpe, notes: r.notes, savedAt: r.saved_at }; });
+    return out;
+  },
+  async saveLog(date, log) {
+    await sb('POST', 'session_logs', { date, status: log.status, rpe: log.rpe, notes: log.notes, saved_at: log.savedAt });
+  },
+  // Poids
+  async getPoids() {
+    return await sb('GET', 'poids', null, '?select=*&order=created_at.asc') || [];
+  },
+  async addPoids(date, poids) {
+    await sb('POST', 'poids', { date, poids });
+  },
+  // Messages
+  async getMessages() {
+    return await sb('GET', 'messages', null, '?select=*&order=created_at.asc') || [];
+  },
+  async addMessage(text) {
+    await sb('POST', 'messages', { text, read_by_athlete: false });
+  },
+  async markMessagesRead() {
+    await sb('PATCH', 'messages', { read_by_athlete: true }, '?read_by_athlete=eq.false');
+  },
+  // Plan overrides
+  async getPlanOverrides() {
+    const rows = await sb('GET', 'plan_overrides', null, '?select=*') || [];
+    const out = {};
+    rows.forEach(r => { out[r.key] = r.value; });
+    return out.sessions ? { sessions: out.sessions } : {};
+  },
+  async savePlanOverride(key, value) {
+    await sb('POST', 'plan_overrides', { key, value });
+  },
+  // Config / PIN
+  async getConfig(key) {
+    const rows = await sb('GET', 'config', null, `?key=eq.${key}&select=value`) || [];
+    return rows[0]?.value || null;
+  },
+  async setConfig(key, value) {
+    await sb('POST', 'config', { key, value });
+  }
+};
+
+// ── DONNÉES ───────────────────────────────────────────────────
 const ATHLETE_NAME = 'Nicolas';
 const TYPE_COLORS = {
-  force:'#c8a96e', kb:'#e0b060', cardio:'#7eb87a',
-  mob:'#c87ab8', bad:'#7a9ec8', repos:'#5c6354'
+  force: '#c8a96e', kb: '#e0b060', cardio: '#7eb87a',
+  mob: '#c87ab8', bad: '#7a9ec8', repos: '#5c6354'
 };
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
   'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
-// ── PLAN DE BASE ─────────────────────────────────────────────
 const BASE_PLAN = {
   "2026-06-30":[{type:'force',label:'Force A',detail:'Parking · poids corps 30\''}],
   "2026-07-02":[{type:'force',label:'Force B',detail:'Parking · core + haut 30\''}],
@@ -59,34 +140,34 @@ const CONGES = [
 
 const PLAN_DETAIL = [
   {phase:'FORCE A — Bas du corps (S1–S4)', exercises:[
-    {name:'Squat gobelet', detail:'Poids corps S1–S4 · KB 12 kg S5+', cues:'1. Dos droit, poitrine haute. 2. Genoux dans l\'axe des orteils, talons au sol. 3. Descente 2–3s, pousser dans les talons.'},
-    {name:'Hip thrust sol', detail:'Poids corps · 3×12 · repos 60s', cues:'1. Pousser dans les talons — jamais la pointe. 2. Fessiers contractés 2s en haut. 3. Ne pas hyperétendre le dos.'},
-    {name:'Fente avant unilatérale', detail:'Poids corps · 3×8/côté · repos 75s', cues:'1. Genou avant dans l\'axe du pied. 2. Buste droit, regard devant. 3. Réduire amplitude si gêne Achille côté droit.'},
-    {name:'Élévation mollet ★ Achille', detail:'Sur marche · 3×15 · descente 4s', cues:'1. Montée 2 pieds → descente 4s sur 1 pied. 2. Descendre SOUS la marche. 3. Rambarde pour équilibre seulement.'},
-    {name:'Step-up', detail:'Chaise/banc · 3×10/côté', cues:'1. Pousser dans le talon du pied posé. 2. Genou au-dessus du pied. 3. Réception contrôlée.'},
+    {name:'Squat gobelet',detail:'Poids corps S1–S4 · KB 12 kg S5+',cues:'1. Dos droit, poitrine haute. 2. Genoux dans l\'axe des orteils, talons au sol. 3. Descente 2–3s, pousser dans les talons.'},
+    {name:'Hip thrust sol',detail:'Poids corps · 3×12 · repos 60s',cues:'1. Pousser dans les talons — jamais la pointe. 2. Fessiers contractés 2s en haut. 3. Ne pas hyperétendre le dos.'},
+    {name:'Fente avant unilatérale',detail:'Poids corps · 3×8/côté · repos 75s',cues:'1. Genou avant dans l\'axe du pied. 2. Buste droit, regard devant. 3. Réduire amplitude si gêne Achille côté droit.'},
+    {name:'Élévation mollet ★ Achille',detail:'Sur marche · 3×15 · descente 4s',cues:'1. Montée 2 pieds → descente 4s sur 1 pied. 2. Descendre SOUS la marche. 3. Rambarde pour équilibre seulement.'},
+    {name:'Step-up',detail:'Chaise/banc · 3×10/côté',cues:'1. Pousser dans le talon du pied posé. 2. Genou au-dessus du pied. 3. Réception contrôlée.'},
   ]},
   {phase:'FORCE B — Haut + Core (S1–S4)', exercises:[
-    {name:'Pompes', detail:'3×10 · repos 60s', cues:'1. Corps en planche parfaite. 2. Coudes à 45°. 3. Hanches ni affaissées ni montantes.'},
-    {name:'Rowing unilatéral', detail:'Élastique → KB 12 kg S5+', cues:'1. Tirer avec le coude vers la poche arrière. 2. Dos plat, ne pas vriller. 3. Descente contrôlée 2–3s.'},
-    {name:'Dead bug', detail:'3×8/côté · poids corps', cues:'1. Bas du dos collé au sol. 2. Expirer pendant le mouvement. 3. Réduire amplitude si dos se décolle.'},
-    {name:'Planche frontale', detail:'3×35s → swissball S5+', cues:'1. Fessiers contractés. 2. Pousser les coudes dans le sol. 3. Respiration lente et régulière.'},
-    {name:'Rotation coiffe élastique ★', detail:'2×15/côté · élastique léger', cues:'1. Coude collé au flanc. 2. 2s aller, 3s retour. 3. Résistance légère — activation.'},
+    {name:'Pompes',detail:'3×10 · repos 60s',cues:'1. Corps en planche parfaite. 2. Coudes à 45°. 3. Hanches ni affaissées ni montantes.'},
+    {name:'Rowing unilatéral',detail:'Élastique → KB 12 kg S5+',cues:'1. Tirer avec le coude vers la poche arrière. 2. Dos plat, ne pas vriller. 3. Descente contrôlée 2–3s.'},
+    {name:'Dead bug',detail:'3×8/côté · poids corps',cues:'1. Bas du dos collé au sol. 2. Expirer pendant le mouvement. 3. Réduire amplitude si dos se décolle.'},
+    {name:'Planche frontale',detail:'3×35s → swissball S5+',cues:'1. Fessiers contractés. 2. Pousser les coudes dans le sol. 3. Respiration lente et régulière.'},
+    {name:'Rotation coiffe élastique ★',detail:'2×15/côté · élastique léger',cues:'1. Coude collé au flanc. 2. 2s aller, 3s retour. 3. Résistance légère — activation.'},
   ]},
   {phase:'KB FORCE A — Chaîne postérieure (S9+)', exercises:[
-    {name:'KB Swing à 2 mains', detail:'KB 16 kg → 20 kg · 4×10', cues:'1. Hip hinge : les hanches propulsent. 2. Fessiers contractés en haut. 3. Talons ancrés au sol.'},
-    {name:'Gobelet squat KB', detail:'KB 16 kg · 3×8', cues:'1. Dos droit, KB contre poitrine. 2. Talons au sol, descente lente. 3. Pousser dans les talons.'},
-    {name:'Hip thrust KB', detail:'KB 20 kg · 3×12', cues:'1. Pousser dans les talons. 2. Fessiers contractés 2s. 3. Ne pas hyperétendre le dos.'},
-    {name:'Suitcase Carry ★', detail:'KB 16→20 kg · 3×20m/côté', cues:'1. Buste parfaitement droit. 2. Épaule côté KB ancrée vers le bas. 3. Pas lents et contrôlés.'},
+    {name:'KB Swing à 2 mains',detail:'KB 16 kg → 20 kg · 4×10',cues:'1. Hip hinge : les hanches propulsent. 2. Fessiers contractés en haut. 3. Talons ancrés au sol.'},
+    {name:'Gobelet squat KB',detail:'KB 16 kg · 3×8',cues:'1. Dos droit, KB contre poitrine. 2. Talons au sol, descente lente. 3. Pousser dans les talons.'},
+    {name:'Hip thrust KB',detail:'KB 20 kg · 3×12',cues:'1. Pousser dans les talons. 2. Fessiers contractés 2s. 3. Ne pas hyperétendre le dos.'},
+    {name:'Suitcase Carry ★',detail:'KB 16→20 kg · 3×20m/côté',cues:'1. Buste parfaitement droit. 2. Épaule côté KB ancrée vers le bas. 3. Pas lents et contrôlés.'},
   ]},
   {phase:'KB FORCE B — Explosivité + gainage bad (S9+)', exercises:[
-    {name:'Fente latérale KB gobelet', detail:'KB 12→16 kg · 3×8/côté', cues:'1. Grand pas latéral, pied à 30–45°. 2. Genou dans l\'axe du pied. 3. Spécifique déplacement bad.'},
-    {name:'Pallof Press élastique', detail:'3×12/côté · repos 45s', cues:'1. Corps perpendiculaire à l\'élastique. 2. Extension + maintien 2s bras tendus. 3. Abdos gainés, épaules basses.'},
-    {name:'KB Row unilatéral', detail:'KB 16→20 kg · 3×10/côté', cues:'1. Coude vers la poche arrière. 2. Dos plat. 3. Descente contrôlée 2–3s.'},
+    {name:'Fente latérale KB gobelet',detail:'KB 12→16 kg · 3×8/côté',cues:'1. Grand pas latéral, pied à 30–45°. 2. Genou dans l\'axe du pied. 3. Spécifique déplacement bad.'},
+    {name:'Pallof Press élastique',detail:'3×12/côté · repos 45s',cues:'1. Corps perpendiculaire à l\'élastique. 2. Extension + maintien 2s bras tendus. 3. Abdos gainés, épaules basses.'},
+    {name:'KB Row unilatéral',detail:'KB 16→20 kg · 3×10/côté',cues:'1. Coude vers la poche arrière. 2. Dos plat. 3. Descente contrôlée 2–3s.'},
   ]},
   {phase:'PROTOCOLE ACHILLE — Chaque matin', exercises:[
-    {name:'Excentrique bilatéral', detail:'3×15 · descente 4s pied droit', cues:'1. Montée 2 pieds → descente 4s sur 1. 2. Sous le niveau de la marche. 3. Gêne légère OK, douleur = stop.'},
-    {name:'Excentrique unilatéral', detail:'Dès S5 si sans douleur · 3×12', cues:'1. Montée ET descente sur 1 pied. 2. Ajouter sac lesté si trop facile. 3. Rambarde pour équilibre.'},
-    {name:'Isométrique contre mur', detail:'Si gêne aiguë · 5×45s', cues:'1. Maintien 45s sans bouger. 2. Respiration régulière. 3. Faire AVANT bad/match.'},
+    {name:'Excentrique bilatéral',detail:'3×15 · descente 4s pied droit',cues:'1. Montée 2 pieds → descente 4s sur 1. 2. Sous le niveau de la marche. 3. Gêne légère OK, douleur = stop.'},
+    {name:'Excentrique unilatéral',detail:'Dès S5 si sans douleur · 3×12',cues:'1. Montée ET descente sur 1 pied. 2. Ajouter sac lesté si trop facile. 3. Rambarde pour équilibre.'},
+    {name:'Isométrique contre mur',detail:'Si gêne aiguë · 5×45s',cues:'1. Maintien 45s sans bouger. 2. Respiration régulière. 3. Faire AVANT bad/match.'},
   ]},
 ];
 
@@ -95,32 +176,24 @@ let currentRole = null;
 let currentPin = '';
 let calMonth = 6, calYear = 2026;
 let sessionLogs = {}, poidsData = [], messages = [], planOverrides = {};
-let pinsConfig = { athlete: '1234', coach: '9999' };
 let selectedDate = null, currentStatus = null;
+let isLoading = false;
 
-// ── STORAGE (localStorage — fonctionne sur GitHub Pages) ─────
-function saveAll() {
-  try {
-    localStorage.setItem('bad_nic_logs', JSON.stringify(sessionLogs));
-    localStorage.setItem('bad_nic_poids', JSON.stringify(poidsData));
-    localStorage.setItem('bad_nic_msgs', JSON.stringify(messages));
-    localStorage.setItem('bad_nic_plan', JSON.stringify(planOverrides));
-    localStorage.setItem('bad_nic_pins', JSON.stringify(pinsConfig));
-  } catch(e) { console.error('Save error', e); }
+// ── HELPERS UI ────────────────────────────────────────────────
+function showLoader(msg = 'Chargement…') {
+  let el = document.getElementById('global-loader');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'global-loader';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(15,17,14,.85);display:flex;align-items:center;justify-content:center;z-index:999;font-family:"DM Mono",monospace;font-size:13px;color:#7eb87a;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'flex';
 }
-function loadAll() {
-  try {
-    const logs = localStorage.getItem('bad_nic_logs');
-    if (logs) sessionLogs = JSON.parse(logs);
-    const poids = localStorage.getItem('bad_nic_poids');
-    if (poids) poidsData = JSON.parse(poids);
-    const msgs = localStorage.getItem('bad_nic_msgs');
-    if (msgs) messages = JSON.parse(msgs);
-    const plan = localStorage.getItem('bad_nic_plan');
-    if (plan) planOverrides = JSON.parse(plan);
-    const pins = localStorage.getItem('bad_nic_pins');
-    if (pins) pinsConfig = JSON.parse(pins);
-  } catch(e) { console.error('Load error', e); }
+function hideLoader() {
+  const el = document.getElementById('global-loader');
+  if (el) el.style.display = 'none';
 }
 
 // ── PLAN MERGE ────────────────────────────────────────────────
@@ -147,17 +220,36 @@ function updatePinDots() {
   for (let i = 0; i < 4; i++)
     document.getElementById('pd' + i).classList.toggle('filled', i < currentPin.length);
 }
-function checkPin() {
-  if (currentPin === pinsConfig.athlete) { login('athlete'); }
-  else if (currentPin === pinsConfig.coach) { login('coach'); }
-  else {
-    document.getElementById('pin-error').textContent = 'PIN incorrect. Réessayez.';
+async function checkPin() {
+  showLoader('Vérification…');
+  try {
+    const hashed = await hashPin(currentPin);
+    const pinAthleteHash = await DB.getConfig('pin_athlete');
+    const pinCoachHash = await DB.getConfig('pin_coach');
+    if (hashed === pinAthleteHash) { hideLoader(); login('athlete'); }
+    else if (hashed === pinCoachHash) { hideLoader(); login('coach'); }
+    else {
+      hideLoader();
+      document.getElementById('pin-error').textContent = 'PIN incorrect. Réessayez.';
+      currentPin = ''; updatePinDots();
+      setTimeout(() => document.getElementById('pin-error').textContent = '', 2000);
+    }
+  } catch (e) {
+    hideLoader();
+    document.getElementById('pin-error').textContent = 'Erreur de connexion. Réessayez.';
     currentPin = ''; updatePinDots();
-    setTimeout(() => document.getElementById('pin-error').textContent = '', 2000);
   }
 }
-function login(role) {
+async function login(role) {
   currentRole = role;
+  showLoader('Chargement des données…');
+  try {
+    sessionLogs = await DB.getLogs();
+    poidsData = await DB.getPoids();
+    messages = await DB.getMessages();
+    planOverrides = await DB.getPlanOverrides();
+  } catch (e) { console.error('Load error', e); }
+  hideLoader();
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-wrap').classList.add('visible');
   document.getElementById('role-badge').textContent = role === 'coach' ? '🎯 Coach' : '🏸 ' + ATHLETE_NAME;
@@ -167,6 +259,7 @@ function login(role) {
 }
 function logout() {
   currentRole = null; currentPin = ''; updatePinDots();
+  sessionLogs = {}; poidsData = []; messages = []; planOverrides = {};
   document.getElementById('app-wrap').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('pin-error').textContent = '';
@@ -209,6 +302,16 @@ function showPage(name) {
   if (name === 'cal' && currentRole === 'athlete') setTimeout(checkUnreadMessages, 100);
 }
 
+// ── REFRESH données depuis Supabase ───────────────────────────
+async function refreshData() {
+  try {
+    sessionLogs = await DB.getLogs();
+    poidsData = await DB.getPoids();
+    messages = await DB.getMessages();
+    planOverrides = await DB.getPlanOverrides();
+  } catch (e) { console.error('Refresh error', e); }
+}
+
 // ── CALENDRIER ────────────────────────────────────────────────
 function renderCal(container) {
   const plan = getPlan();
@@ -232,7 +335,6 @@ function renderCal(container) {
     </div>
     <div class="cal-grid" id="cal-body"></div>
   </div><div id="day-detail"></div>`;
-
   const body = document.getElementById('cal-body');
   let sd = new Date(calYear, calMonth, 1).getDay();
   sd = sd === 0 ? 6 : sd - 1;
@@ -255,7 +357,6 @@ function renderCal(container) {
   }
   body.innerHTML = rows;
 }
-
 function prevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } showPage('cal'); }
 function nextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } showPage('cal'); }
 
@@ -267,7 +368,6 @@ function selectDay(ds) {
   const isConge = CONGES.includes(ds);
   const d = new Date(ds + 'T12:00:00');
   const dateStr = d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
   let html = `<div class="card"><div class="card-title">${dateStr}</div>`;
   if (isConge) {
     html += `<div style="color:#7a9ec8;font-size:12px;">🏖 Congés — pas de séance prévue</div>`;
@@ -328,15 +428,20 @@ function updateStatusBtns() {
   });
   document.getElementById('ms-rpe-row').style.opacity = currentStatus === 'skipped' ? '0.4' : '1';
 }
-function saveSessionLog() {
+async function saveSessionLog() {
   if (!selectedDate || !currentStatus) return;
-  sessionLogs[selectedDate] = {
+  const log = {
     status: currentStatus,
     rpe: currentStatus !== 'skipped' ? parseInt(document.getElementById('ms-rpe').value) : null,
     notes: document.getElementById('ms-notes').value.trim(),
     savedAt: new Date().toISOString()
   };
-  saveAll();
+  showLoader('Enregistrement…');
+  try {
+    await DB.saveLog(selectedDate, log);
+    sessionLogs[selectedDate] = log;
+  } catch (e) { console.error(e); }
+  hideLoader();
   closeModal('modal-session');
   showPage('cal');
 }
@@ -369,17 +474,20 @@ function renderPoids(container) {
     <svg id="poids-svg" viewBox="0 0 400 140" preserveAspectRatio="none" style="width:100%;height:140px;display:block;"></svg>
     <div class="poids-stats" id="poids-stats"></div>
     <div id="poids-traject"></div>
-    <div style="font-size:11px;color:#5c6354;margin-top:10px;line-height:1.5;">
-      Fréquence conseillée : 2×/sem · matin à jeun · même conditions.
-    </div>
+    <div style="font-size:11px;color:#5c6354;margin-top:10px;line-height:1.5;">Fréquence conseillée : 2×/sem · matin à jeun · même conditions.</div>
   </div>`;
   drawPoids();
 }
-function addPoids() {
+async function addPoids() {
   const v = parseFloat(document.getElementById('poids-in').value);
   if (isNaN(v) || v < 60 || v > 130) return;
-  poidsData.push({ date: new Date().toISOString().split('T')[0], poids: v });
-  saveAll();
+  const entry = { date: new Date().toISOString().split('T')[0], poids: v };
+  showLoader('Enregistrement…');
+  try {
+    await DB.addPoids(entry.date, entry.poids);
+    poidsData.push(entry);
+  } catch (e) { console.error(e); }
+  hideLoader();
   document.getElementById('poids-in').value = '';
   drawPoids();
 }
@@ -418,8 +526,8 @@ function drawPoids() {
   const weeks = n > 1 ? Math.max(1, Math.round((new Date(poidsData[n - 1].date) - new Date(poidsData[0].date)) / (7 * 24 * 3600 * 1000))) : 1;
   const rate = (first - last) / weeks;
   traj.innerHTML = n < 2 ? '<div class="traject t-warn">Ajoute au moins 2 pesées pour voir la trajectoire.</div>' :
-    rate >= 0.4 ? `<div class="traject t-ok">✓ Tu perds ~${rate.toFixed(2)} kg/sem — dans la trajectoire cible.</div>` :
-    rate > 0 ? `<div class="traject t-warn">⚠ ~${rate.toFixed(2)} kg/sem — légèrement sous la cible. Vérifier l'alimentation.</div>` :
+    rate >= 0.4 ? `<div class="traject t-ok">✓ ~${rate.toFixed(2)} kg/sem — dans la trajectoire cible.</div>` :
+    rate > 0 ? `<div class="traject t-warn">⚠ ~${rate.toFixed(2)} kg/sem — légèrement sous la cible.</div>` :
     '<div class="traject t-alert">↑ Poids stable ou en hausse. Ajuster l\'alimentation.</div>';
 }
 
@@ -494,10 +602,10 @@ async function runAnalyse(lastRpes, lastPoids) {
     });
     const data = await resp.json();
     result.className = 'analyse-result';
-    result.innerHTML = (data.content?.[0]?.text || 'Erreur lors de la génération.').replace(/\n/g, '<br>');
+    result.innerHTML = (data.content?.[0]?.text || 'Erreur').replace(/\n/g, '<br>');
     document.getElementById('analyse-date').textContent = 'Dernière analyse : ' + new Date().toLocaleString('fr-BE');
   } catch (e) {
-    result.className = 'analyse-result error'; result.textContent = 'Erreur de connexion. Réessaie dans quelques instants.';
+    result.className = 'analyse-result error'; result.textContent = 'Erreur de connexion.';
   }
   btn.disabled = false; btn.textContent = '⚡ Générer les conseils pour les prochaines séances';
 }
@@ -512,10 +620,13 @@ function renderCoach(container) {
     if (plan[ds]) upcomingSessions.push({ date: ds, sessions: plan[ds] });
   }
   const recentLogs = Object.entries(sessionLogs).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 5);
-  const rpes = recentLogs.filter(([, v]) => v.rpe).map(([d, v]) => ({ date: d, rpe: v.rpe, notes: v.notes }));
+  const rpes = recentLogs.filter(([, v]) => v.rpe).map(([d, v]) => ({ date: d, rpe: v.rpe }));
 
   let html = `<div class="card">
-    <div class="card-title">Vue d'ensemble — ${ATHLETE_NAME}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div class="card-title" style="margin:0;">Vue d'ensemble — ${ATHLETE_NAME}</div>
+      <button class="btn" style="border-color:#353b31;color:#9aa08a;font-size:10px;padding:4px 8px;" onclick="reloadCoachData()">↻ Rafraîchir</button>
+    </div>
     <div class="data-stats">
       <div class="stat-box"><div class="stat-val">${Object.values(sessionLogs).filter(v => v.status === 'done').length}</div><div class="stat-label">Séances faites</div></div>
       <div class="stat-box"><div class="stat-val">${rpes.length > 0 ? (rpes.reduce((a, b) => a + b.rpe, 0) / rpes.length).toFixed(1) : '—'}</div><div class="stat-label">RPE moyen</div></div>
@@ -526,15 +637,15 @@ function renderCoach(container) {
   html += `<div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <div class="card-title" style="margin:0;">Messages à ${ATHLETE_NAME}</div>
-      <button class="btn" style="border-color:#c8a96e;color:#c8a96e;font-size:11px;padding:5px 10px;" onclick="openMessageModal()">+ Nouveau message</button>
+      <button class="btn" style="border-color:#c8a96e;color:#c8a96e;font-size:11px;padding:5px 10px;" onclick="openMessageModal()">+ Nouveau</button>
     </div>`;
   if (messages.length === 0) { html += `<div class="empty">Aucun message envoyé</div>`; }
   else {
     messages.slice().reverse().slice(0, 5).forEach(m => {
       html += `<div class="message-box">
-        <div class="message-from">Toi → ${ATHLETE_NAME} ${m.readByAthlete ? '· <span style="color:#7eb87a">Lu</span>' : '· <span style="color:#5c6354">Non lu</span>'}</div>
+        <div class="message-from">Toi → ${ATHLETE_NAME} ${m.read_by_athlete ? '· <span style="color:#7eb87a">Lu</span>' : '· <span style="color:#5c6354">Non lu</span>'}</div>
         <div class="message-text">${m.text}</div>
-        <div class="message-date">${new Date(m.date).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+        <div class="message-date">${new Date(m.created_at).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
       </div>`;
     });
   }
@@ -555,7 +666,7 @@ function renderCoach(container) {
           <div class="esc-date">${ds}</div>
           <div class="esc-name">${s.label}</div>
           <div class="esc-detail">${s.detail || ''}</div>
-          ${s.coachNote ? `<div style="font-size:10px;color:#c8a96e;margin-top:2px;">Note: ${s.coachNote}</div>` : ''}
+          ${s.coachNote ? `<div style="font-size:10px;color:#c8a96e;margin-top:2px;">📌 ${s.coachNote}</div>` : ''}
         </div>`;
       });
     });
@@ -564,18 +675,29 @@ function renderCoach(container) {
 
   html += `<div class="card"><div class="card-title">Analyse IA — Vue coach</div>
     <button class="btn btn-blue" id="btn-coach-analyse" onclick="runCoachAnalyse()">⚡ Analyser et conseiller ${ATHLETE_NAME}</button>
-    <div class="analyse-result loading" id="coach-analyse-result" style="margin-top:10px;">Lance une analyse pour obtenir des recommandations de plan.</div>
+    <div class="analyse-result loading" id="coach-analyse-result" style="margin-top:10px;">Lance une analyse pour obtenir des recommandations.</div>
   </div>`;
 
   container.innerHTML = html;
 }
 
+async function reloadCoachData() {
+  showLoader('Rafraîchissement…');
+  await refreshData();
+  hideLoader();
+  showPage('coach');
+}
+
 function openMessageModal() { document.getElementById('modal-message').classList.remove('hidden'); }
-function sendMessage() {
+async function sendMessage() {
   const text = document.getElementById('msg-text').value.trim();
   if (!text) return;
-  messages.push({ text, date: new Date().toISOString(), readByAthlete: false });
-  saveAll();
+  showLoader('Envoi…');
+  try {
+    await DB.addMessage(text);
+    messages = await DB.getMessages();
+  } catch (e) { console.error(e); }
+  hideLoader();
   closeModal('modal-message');
   document.getElementById('msg-text').value = '';
   showPage('coach');
@@ -600,7 +722,8 @@ function openAddSessionForDate(date) {
   document.getElementById('mas-date').value = date;
   document.getElementById('modal-add-session').classList.remove('hidden');
 }
-function saveEditSession() {
+
+async function saveEditSession() {
   const date = document.getElementById('mes-date').value;
   const idx = parseInt(document.getElementById('mes-idx').value);
   const plan = getPlan();
@@ -612,11 +735,14 @@ function saveEditSession() {
   if (note) sessions[idx].coachNote = note; else delete sessions[idx].coachNote;
   if (!planOverrides.sessions) planOverrides.sessions = {};
   planOverrides.sessions[date] = sessions;
-  saveAll();
+  showLoader('Sauvegarde…');
+  try { await DB.savePlanOverride('sessions', planOverrides.sessions); } catch (e) { console.error(e); }
+  hideLoader();
   closeModal('modal-edit-session');
   showPage('coach');
 }
-function deleteSession() {
+
+async function deleteSession() {
   const date = document.getElementById('mes-date').value;
   const idx = parseInt(document.getElementById('mes-idx').value);
   const plan = getPlan();
@@ -624,11 +750,14 @@ function deleteSession() {
   sessions.splice(idx, 1);
   if (!planOverrides.sessions) planOverrides.sessions = {};
   planOverrides.sessions[date] = sessions.length > 0 ? sessions : null;
-  saveAll();
+  showLoader('Suppression…');
+  try { await DB.savePlanOverride('sessions', planOverrides.sessions); } catch (e) { console.error(e); }
+  hideLoader();
   closeModal('modal-edit-session');
   showPage('coach');
 }
-function addNewSession() {
+
+async function addNewSession() {
   const date = document.getElementById('mas-date').value;
   const type = document.getElementById('mas-type').value;
   const label = document.getElementById('mas-label').value;
@@ -639,10 +768,13 @@ function addNewSession() {
   sessions.push({ type, label, detail });
   if (!planOverrides.sessions) planOverrides.sessions = {};
   planOverrides.sessions[date] = sessions;
-  saveAll();
+  showLoader('Ajout…');
+  try { await DB.savePlanOverride('sessions', planOverrides.sessions); } catch (e) { console.error(e); }
+  hideLoader();
   closeModal('modal-add-session');
   showPage('coach');
 }
+
 async function runCoachAnalyse() {
   const btn = document.getElementById('btn-coach-analyse');
   const result = document.getElementById('coach-analyse-result');
@@ -690,23 +822,36 @@ function renderSettings(container) {
     <button class="btn" style="width:100%;border-color:#353b31;color:#9aa08a;" onclick="markAllRead()">Marquer tous les messages comme lus par ${ATHLETE_NAME}</button>
   </div>`;
 }
-function savePins() {
+async function savePins() {
   const a = document.getElementById('set-pin-athlete')?.value.trim();
   const c = document.getElementById('set-pin-coach')?.value.trim();
-  if (a && a.length === 4 && /^\d+$/.test(a)) pinsConfig.athlete = a;
-  if (c && c.length === 4 && /^\d+$/.test(c)) pinsConfig.coach = c;
-  saveAll();
+  showLoader('Sauvegarde…');
+  try {
+    if (a && a.length === 4 && /^\d+$/.test(a)) {
+      const h = await hashPin(a);
+      await DB.setConfig('pin_athlete', h);
+    }
+    if (c && c.length === 4 && /^\d+$/.test(c)) {
+      const h = await hashPin(c);
+      await DB.setConfig('pin_coach', h);
+    }
+  } catch (e) { console.error(e); }
+  hideLoader();
   alert('PIN sauvegardés avec succès.');
 }
-function markAllRead() {
-  messages.forEach(m => m.readByAthlete = true);
-  saveAll();
+async function markAllRead() {
+  showLoader('Mise à jour…');
+  try {
+    await DB.markMessagesRead();
+    messages = await DB.getMessages();
+  } catch (e) { console.error(e); }
+  hideLoader();
   showPage('settings');
 }
 
 // ── MESSAGES NON LUS ──────────────────────────────────────────
 function checkUnreadMessages() {
-  const unread = messages.filter(m => !m.readByAthlete);
+  const unread = messages.filter(m => !m.read_by_athlete);
   if (unread.length > 0) {
     const mc = document.getElementById('main-content');
     if (mc.querySelector('.coach-banner')) return;
@@ -714,13 +859,13 @@ function checkUnreadMessages() {
     banner.className = 'coach-banner';
     banner.style.cssText = 'background:#2a1f00;border:1px solid #c8a96e;border-radius:6px;padding:10px 14px;margin-bottom:10px;cursor:pointer;';
     banner.innerHTML = `<div style="font-size:11px;color:#c8a96e;font-weight:500;">📩 ${unread.length} message${unread.length > 1 ? 's' : ''} de ton coach</div><div style="font-size:12px;color:#e8ead5;margin-top:4px;">"${unread[0].text.slice(0, 80)}${unread[0].text.length > 80 ? '…' : ''}"</div>`;
-    banner.onclick = () => { messages.forEach(m => m.readByAthlete = true); saveAll(); banner.remove(); };
+    banner.onclick = async () => {
+      try { await DB.markMessagesRead(); messages = await DB.getMessages(); } catch (e) {}
+      banner.remove();
+    };
     if (mc.firstChild) mc.insertBefore(banner, mc.firstChild); else mc.appendChild(banner);
   }
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-// ── INIT ──────────────────────────────────────────────────────
-loadAll();
