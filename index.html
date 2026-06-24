@@ -2,254 +2,403 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plan Badminton — Nicolas</title>
-<meta name="description" content="Plan d'entraînement badminton personnalisé — Nicolas · Saison 2026–27">
-<meta name="theme-color" content="#0f110e">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Bad · Nicolas</title>
 <link rel="manifest" href="manifest.json">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
-:root{
-  --bg:#0f110e;--bg2:#171a15;--bg3:#1e2219;--border:#2a2f27;--border2:#353b31;
-  --text:#e8ead5;--text2:#9aa08a;--text3:#5c6354;
-  --green:#7eb87a;--green2:#4a8a46;--amber:#c8a96e;--amber2:#8a6030;
-  --red:#c47a6a;--blue:#7a9ec8;--blue2:#185FA5;--purple:#a87ac8;
-  --radius:10px;--radius-sm:6px;
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+:root {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2128; --bg4:#21262d;
+  --border:#30363d; --border2:#3d444d;
+  --text:#e6edf3; --text2:#8b949e; --text3:#484f58;
+  --blue:#58a6ff; --blue2:#1f6feb; --blue3:#0d419d;
+  --green:#3fb950; --green2:#238636; --green3:#0f3820;
+  --amber:#d29922; --amber2:#bb8009; --amber3:#341a00;
+  --red:#f85149; --red2:#b91c1c; --red3:#3d1a1a;
+  --purple:#bc8cff; --purple2:#6b3fa0; --purple3:#1a0d2e;
+  --r:8px; --r-sm:5px;
+  --nav-h:58px; --hdr-h:50px;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;min-height:100vh;}
-h1,h2,h3{font-family:'Fraunces',serif;font-weight:300;}
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
-.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:340px;text-align:center;}
-.login-title{font-family:'Fraunces',serif;font-size:22px;color:var(--text);margin-bottom:4px;}
-.login-sub{font-size:11px;color:var(--text3);margin-bottom:1.5rem;letter-spacing:.05em;text-transform:uppercase;}
-.pin-display{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem;}
-.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);transition:all .15s;}
-.pin-dot.filled{background:var(--green);border-color:var(--green);}
-.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto 1rem;}
-.pin-btn{padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;font-size:16px;transition:all .15s;}
-.pin-btn:hover{border-color:var(--border2);background:var(--bg2);}
-.pin-error{font-size:11px;color:var(--red);margin-top:8px;min-height:16px;}
-.app-wrap{display:none;min-height:100vh;flex-direction:column;}
-.app-wrap.visible{display:flex;}
-.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
-.app-title{font-family:'Fraunces',serif;font-size:18px;color:var(--text);}
-.role-badge{font-size:10px;font-weight:500;padding:3px 10px;border-radius:999px;letter-spacing:.05em;}
-.role-athlete{background:#1a2e18;color:var(--green);border:1px solid var(--green2);}
-.role-coach{background:#1a1f2e;color:var(--blue);border:1px solid var(--blue2);}
-.logout-btn{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px 8px;}
-.logout-btn:hover{color:var(--text);}
-.nav{display:flex;gap:4px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.nav-btn{padding:6px 12px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all .15s;}
-.nav-btn:hover{border-color:var(--border2);color:var(--text);}
-.nav-btn.active{background:var(--green2);border-color:var(--green);color:var(--text);}
-.nav-btn.coach-tab{border-color:var(--blue2);color:var(--blue);}
-.nav-btn.coach-tab.active{background:var(--blue2);border-color:var(--blue);color:var(--text);}
-.main{flex:1;padding:16px;overflow-y:auto;}
-.page{display:none;}.page.active{display:block;}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
-.card-title{font-family:'Fraunces',serif;font-weight:300;font-size:15px;color:var(--text);margin-bottom:10px;}
-.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.month-name{font-family:'Fraunces',serif;font-size:18px;font-weight:300;flex:1;}
-.cal-btn{width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
-.cal-btn:hover{border-color:var(--border2);color:var(--text);}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-hdr{font-size:10px;color:var(--text3);text-align:center;padding:3px 0;}
-.cal-day{border-radius:4px;border:.5px solid var(--border);background:var(--bg3);min-height:44px;padding:3px;cursor:pointer;transition:all .1s;}
-.cal-day:hover{border-color:var(--border2);}
-.cal-day.empty{background:transparent;border-color:transparent;cursor:default;}
-.cal-day.today{border-color:var(--green);}
-.cal-day.done{background:#1a2e18;border-color:var(--green2);}
-.cal-day.skipped{background:#2e1a18;border-color:var(--red);opacity:.7;}
-.cal-day.conge{background:#1a1f2e;border-color:var(--blue);opacity:.6;}
-.cal-dn{font-size:9px;color:var(--text3);text-align:right;margin-bottom:1px;}
-.cal-dot{width:5px;height:5px;border-radius:50%;margin:1px auto 0;}
-.session-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:.5px solid var(--border);}
-.s-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
-.modal-overlay.hidden{display:none;}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;}
-.modal-title{font-family:'Fraunces',serif;font-size:17px;font-weight:300;margin-bottom:14px;}
-.modal-close{float:right;background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;margin-top:-4px;}
-.form-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:.04em;text-transform:uppercase;}
-.form-row{margin-bottom:12px;}
-.status-btns{display:flex;gap:6px;}
-.status-btn{flex:1;padding:7px 4px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;text-align:center;transition:all .15s;}
-.status-btn.sel-done{background:#1a2e18;border-color:var(--green);color:var(--green);}
-.status-btn.sel-skipped{background:#2e1a18;border-color:var(--red);color:var(--red);}
-.status-btn.sel-moved{background:#2a2218;border-color:var(--amber);color:var(--amber);}
-.rpe-val{text-align:center;font-size:22px;font-family:'Fraunces',serif;color:var(--green);margin:4px 0;}
-.rpe-slider{width:100%;accent-color:var(--green);}
-.rpe-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:2px;}
-textarea,input[type=text],input[type=number],input[type=password]{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;}
-textarea{resize:vertical;min-height:60px;}
-textarea:focus,input:focus{outline:none;border-color:var(--border2);}
-.btn{padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;transition:all .15s;border:1px solid;}
-.btn-primary{background:var(--green2);border-color:var(--green2);color:var(--text);width:100%;margin-top:8px;}
-.btn-primary:hover{background:var(--green);}
-.btn-blue{background:var(--blue2);border-color:var(--blue2);color:var(--text);width:100%;margin-top:8px;}
-.btn-blue:hover{background:var(--blue);}
-.btn-danger{background:#3a1a18;border-color:var(--red);color:var(--red);font-size:11px;padding:6px 12px;}
-.poids-form{display:flex;gap:8px;margin-bottom:12px;}
-.poids-input{flex:1;font-size:16px;}
-.btn-add{padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--green2);background:var(--green2);color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;}
-.poids-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
-.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;text-align:center;}
-.stat-val{font-family:'Fraunces',serif;font-size:18px;color:var(--text);}
-.stat-label{font-size:10px;color:var(--text3);margin-top:1px;}
-.traject{font-size:11px;padding:7px 10px;border-radius:var(--radius-sm);margin-top:8px;line-height:1.5;}
-.t-ok{background:#1a2e18;border:1px solid var(--green2);color:var(--green);}
-.t-warn{background:#2e2518;border:1px solid var(--amber);color:var(--amber);}
-.t-alert{background:#2e1a18;border:1px solid var(--red);color:var(--red);}
-.analyse-result{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:80px;line-height:1.7;font-size:12px;color:var(--text2);}
-.analyse-result.loading{color:var(--text3);font-style:italic;}
-.analyse-result.error{color:var(--red);border-color:var(--red);}
-.data-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
-.message-box{background:var(--bg3);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;}
-.message-from{font-size:10px;color:var(--amber);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
-.message-text{font-size:12px;color:var(--text);line-height:1.5;}
-.message-date{font-size:10px;color:var(--text3);margin-top:4px;}
-.edit-session-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;cursor:pointer;}
-.edit-session-card:hover{border-color:var(--border2);}
-.esc-date{font-size:11px;color:var(--text3);}
-.esc-name{font-size:12px;color:var(--text);margin:2px 0;}
-.esc-detail{font-size:11px;color:var(--text2);}
-.coach-badge{font-size:9px;background:#1a1f2e;color:var(--blue);border:1px solid var(--blue2);padding:2px 6px;border-radius:3px;margin-left:6px;}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:.5px solid var(--border);}
-.settings-row:first-child{border-top:none;}
-.settings-label{font-size:12px;color:var(--text);}
-.settings-sub{font-size:10px;color:var(--text3);}
-.hist-item{padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;}
-.hist-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
-.hist-date{font-size:11px;color:var(--text3);}
-.hist-rpe{font-family:'Fraunces',serif;font-size:15px;}
-.hist-note{font-size:11px;color:var(--text2);margin-top:4px;font-style:italic;}
-.sb{font-size:9px;padding:1px 6px;border-radius:3px;}
-.sb-done{background:#1a2e18;color:var(--green);}
-.sb-skipped{background:#2e1a18;color:var(--red);}
-.sb-moved{background:#2a2218;color:var(--amber);}
-.empty{text-align:center;color:var(--text3);padding:24px;font-style:italic;}
-.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);}
-.leg-dot{width:8px;height:8px;border-radius:2px;}
-.ex-item{padding:7px 0;border-top:.5px solid var(--border);}
-.ex-item:first-child{border-top:none;}
-.ex-name{font-size:12px;color:var(--text);margin-bottom:3px;}
-.ex-detail{font-size:11px;color:var(--text3);}
-.ex-cue{font-size:10px;color:var(--text2);margin-top:3px;padding:3px 6px;background:var(--bg3);border-radius:3px;line-height:1.4;}
-.phase-hdr{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:5px 0;border-bottom:.5px solid var(--border);margin-bottom:6px;}
-@media(max-width:480px){.main{padding:10px;}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;}
+
+/* ─ LOADER ─ */
+#loader{position:fixed;inset:0;background:rgba(13,17,23,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:900;gap:10px;}
+#loader.off{display:none;}
+.spin{width:26px;height:26px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loader-msg{font-size:11px;color:var(--text3);}
+
+/* ─ LOGIN ─ */
+#login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:800;padding:1.5rem;}
+#login.off{display:none;}
+.lcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.8rem;width:100%;max-width:300px;text-align:center;}
+.ltitle{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--text);margin-bottom:2px;}
+.lsub{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.4rem;}
+.pdots{display:flex;gap:10px;justify-content:center;margin-bottom:1.4rem;}
+.pdot{width:12px;height:12px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);transition:all .15s;}
+.pdot.on{background:var(--blue);border-color:var(--blue);}
+.ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:190px;margin:0 auto .8rem;}
+.pkey{padding:12px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-family:'DM Mono',monospace;font-size:15px;transition:all .1s;}
+.pkey:hover{background:var(--bg4);}
+.pkey:active{transform:scale(.94);}
+.perr{font-size:11px;color:var(--red);min-height:16px;margin-bottom:4px;}
+.phint{font-size:10px;color:var(--text3);line-height:1.6;}
+
+/* ─ SHELL ─ */
+#app{display:none;flex-direction:column;height:100vh;}
+#app.on{display:flex;}
+.hdr{height:var(--hdr-h);background:var(--bg2);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hdr-title{font-family:'Fraunces',serif;font-size:16px;font-weight:300;}
+.rpill{font-size:10px;font-weight:500;padding:2px 9px;border-radius:999px;}
+.rpill.ath{background:var(--green3);color:var(--green);border:1px solid var(--green2);}
+.rpill.coach{background:var(--blue3);color:var(--blue);border:1px solid var(--blue2);}
+.lout{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px;}
+.lout:hover{color:var(--text);}
+.content{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h)+6px);}
+.bnav{height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;flex-shrink:0;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;color:var(--text3);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.03em;transition:color .15s;position:relative;padding:0 2px;}
+.ni.on{color:var(--blue);}
+.ni svg{width:19px;height:19px;}
+.nbadge{position:absolute;top:5px;right:calc(50% - 17px);background:var(--red);color:#fff;font-size:8px;padding:1px 4px;border-radius:999px;min-width:14px;text-align:center;}
+.nbadge.off{display:none;}
+
+/* ─ PAGES ─ */
+.pg{display:none;}.pg.on{display:block;}
+.sec{padding:12px 12px 0;}
+.sec-last{padding-bottom:12px;}
+
+/* ─ CARDS ─ */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.ch{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ct{font-family:'Fraunces',serif;font-size:13px;font-weight:300;color:var(--text);}
+.cb{padding:11px 13px;}
+.csub{font-size:10px;color:var(--text3);}
+
+/* ─ TAGS ─ */
+.tag{display:inline-block;font-size:9px;font-weight:500;padding:2px 6px;border-radius:999px;letter-spacing:.03em;}
+.tf{background:#2a1f00;color:var(--amber);border:1px solid var(--amber2);}
+.tk{background:#1a1500;color:#c8a96e;border:1px solid #6a5020;}
+.tc{background:var(--green3);color:var(--green);border:1px solid var(--green2);}
+.tm{background:var(--purple3);color:var(--purple);border:1px solid var(--purple2);}
+.tb{background:var(--blue3);color:var(--blue);border:1px solid var(--blue2);}
+.tr{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+
+/* ─ METRICS ─ */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 12px;}
+.mbox{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 7px;text-align:center;}
+.mv{font-family:'Fraunces',serif;font-size:21px;font-weight:300;line-height:1.1;}
+.mv.g{color:var(--green);} .mv.a{color:var(--amber);} .mv.r{color:var(--red);} .mv.b{color:var(--blue);} .mv.d{color:var(--text3);font-size:16px;}
+.ml{font-size:9px;color:var(--text3);margin-top:2px;line-height:1.2;}
+
+/* ─ BUTTONS ─ */
+.btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;border-radius:var(--r-sm);border:1px solid;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;transition:all .15s;width:100%;}
+.bp{background:var(--green2);border-color:var(--green2);color:#fff;}
+.bp:hover{background:var(--green);}
+.bb{background:var(--blue2);border-color:var(--blue2);color:#fff;}
+.bb:hover{background:var(--blue);}
+.bg{background:transparent;border-color:var(--border2);color:var(--text2);}
+.bg:hover{border-color:var(--text2);color:var(--text);}
+.bd{background:var(--red3);border-color:var(--red2);color:var(--red);}
+.bsm{padding:5px 10px;font-size:10px;width:auto;}
+
+/* ─ FORMS ─ */
+.fl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block;}
+.fr{margin-bottom:12px;}
+textarea,input[type=text],input[type=number],input[type=password]{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;}
+textarea{resize:vertical;min-height:55px;}
+textarea:focus,input:focus{outline:none;border-color:var(--blue2);}
+select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;}
+.srow{display:flex;gap:5px;}
+.sbtn{flex:1;padding:7px 3px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;text-align:center;transition:all .15s;}
+.sbtn.sd{background:var(--green3);border-color:var(--green2);color:var(--green);}
+.sbtn.ss{background:var(--red3);border-color:var(--red2);color:var(--red);}
+.sbtn.sm{background:var(--amber3);border-color:var(--amber2);color:var(--amber);}
+.rvl{font-family:'Fraunces',serif;font-size:34px;font-weight:300;color:var(--blue);text-align:center;margin:4px 0;}
+input[type=range]{width:100%;accent-color:var(--blue);}
+.rlbls{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px;}
+
+/* ─ CALENDRIER ─ */
+.cnav{display:flex;align-items:center;gap:8px;padding:9px 12px;}
+.cmn{font-family:'Fraunces',serif;font-size:15px;font-weight:300;flex:1;}
+.carr{width:24px;height:24px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.carr:hover{border-color:var(--border2);color:var(--text);}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 8px 8px;}
+.chdr{font-size:9px;color:var(--text3);text-align:center;padding:2px 0;}
+.cday{border-radius:3px;border:.5px solid var(--border);background:var(--bg3);min-height:40px;padding:2px;cursor:pointer;transition:all .1s;display:flex;flex-direction:column;align-items:center;}
+.cday:hover{border-color:var(--border2);}
+.cday.empty{background:transparent;border-color:transparent;cursor:default;}
+.cday.today{border-color:var(--blue);}
+.cday.done{background:var(--green3);border-color:var(--green2);}
+.cday.skip{background:var(--red3);border-color:var(--red2);opacity:.7;}
+.cday.conge{background:var(--blue3);border-color:var(--blue2);opacity:.5;}
+.cdn{font-size:9px;color:var(--text3);margin-bottom:1px;}
+.cdot{width:5px;height:5px;border-radius:50%;}
+
+/* ─ EXERCICES ─ */
+.exblock{padding:7px 0;border-top:.5px solid var(--border);}
+.exblock:first-child{border-top:none;}
+.exname{font-size:12px;color:var(--text);font-weight:500;margin-bottom:2px;}
+.exsets{font-size:10px;color:var(--text3);margin-bottom:3px;}
+.excue{font-size:10px;color:var(--text2);line-height:1.5;padding:3px 7px;background:var(--bg3);border-radius:3px;}
+
+/* ─ HISTORIQUE ─ */
+.hitem{padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer;}
+.hitem:hover{border-color:var(--border2);}
+.htop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+.hdate{font-size:10px;color:var(--text3);}
+.hrpe{font-family:'Fraunces',serif;font-size:15px;}
+.hnote{font-size:11px;color:var(--text2);font-style:italic;margin-top:3px;}
+
+/* ─ DISCUSSION ─ */
+.disc-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--hdr-h) - var(--nav-h) - 90px);overflow:hidden;}
+.disc-msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.disc-input{padding:8px 12px;border-top:1px solid var(--border);background:var(--bg2);display:flex;gap:6px;align-items:flex-end;}
+.disc-input textarea{min-height:38px;max-height:90px;flex:1;font-size:12px;border-radius:var(--r-sm);}
+.disc-send{padding:9px 12px;border-radius:var(--r-sm);border:1px solid var(--blue2);background:var(--blue2);color:#fff;cursor:pointer;font-size:13px;flex-shrink:0;}
+.disc-send:hover{background:var(--blue);}
+.bubble{max-width:82%;padding:8px 10px;border-radius:10px;font-size:12px;line-height:1.5;position:relative;}
+.bubble.mine{background:var(--blue2);color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+.bubble.theirs{background:var(--bg3);color:var(--text);align-self:flex-start;border:1px solid var(--border);border-bottom-left-radius:3px;}
+.bubble-author{font-size:9px;opacity:.7;margin-bottom:3px;font-weight:500;}
+.bubble-time{font-size:9px;opacity:.6;margin-top:3px;text-align:right;}
+.bubble-ref{font-size:9px;padding:3px 7px;border-radius:3px;margin-bottom:5px;background:rgba(255,255,255,.12);border-left:2px solid rgba(255,255,255,.4);display:flex;align-items:center;gap:4px;}
+.bubble-ref.theirs-ref{background:var(--bg4);border-color:var(--border2);color:var(--text3);}
+.disc-ref-banner{padding:5px 10px;background:var(--amber3);border-top:1px solid var(--amber2);font-size:10px;color:var(--amber);display:flex;align-items:center;justify-content:space-between;}
+.disc-ref-banner.off{display:none;}
+.ref-clear{background:none;border:none;color:var(--amber);cursor:pointer;font-size:14px;}
+
+/* ─ ANALYSE ─ */
+.sring{position:relative;width:76px;height:76px;margin:0 auto 4px;}
+.sring svg{transform:rotate(-90deg);}
+.sring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;font-weight:300;}
+.prog{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex:1;}
+.progf{height:100%;border-radius:3px;transition:width .4s;}
+.arow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:.5px solid var(--border);font-size:11px;}
+.arow:first-child{border-top:none;}
+.adot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.albl{flex:1;color:var(--text2);}
+.aval{color:var(--text);font-weight:500;}
+.ai-box{font-size:12px;line-height:1.7;color:var(--text2);padding:10px;background:var(--bg3);border-radius:var(--r-sm);}
+.ai-box.loading{color:var(--text3);font-style:italic;}
+.ai-box.error{color:var(--red);}
+
+/* ─ COACH EDITOR ─ */
+.ex-editor{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-bottom:8px;}
+.ex-editor-hdr{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.ex-num{font-size:10px;color:var(--text3);width:20px;flex-shrink:0;}
+
+/* ─ INFOBOXES ─ */
+.ibox{padding:7px 10px;border-radius:var(--r-sm);font-size:11px;line-height:1.5;margin-bottom:8px;}
+.ibox.warn{background:var(--amber3);border-left:3px solid var(--amber);color:var(--amber);}
+.ibox.info{background:var(--blue3);border-left:3px solid var(--blue);color:var(--blue);}
+.ibox.ok{background:var(--green3);border-left:3px solid var(--green);color:var(--green);}
+.ibox.red{background:var(--red3);border-left:3px solid var(--red);color:var(--red);}
+.empty{text-align:center;color:var(--text3);padding:20px;font-style:italic;font-size:12px;}
+
+/* ─ POIDS SVG ─ */
+.psvg{width:100%;height:100px;display:block;}
+
+/* ─ MODALS ─ */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;justify-content:center;z-index:600;padding:0;}
+.ov.off{display:none;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r) var(--r) 0 0;padding:16px 14px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;}
+.mhandle{width:34px;height:3px;border-radius:2px;background:var(--border2);margin:0 auto 12px;}
+.mtitle{font-family:'Fraunces',serif;font-size:16px;font-weight:300;margin-bottom:12px;}
+.mclose{float:right;background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;margin-top:-3px;}
+
+@media(max-width:380px){.mgrid{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
-<div class="login-screen" id="login-screen">
-  <div class="login-card">
-    <h1 class="login-title">Plan Badminton</h1>
-    <div class="login-sub">Nicolas · Saison 2026–27</div>
-    <div class="pin-display">
-      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+
+<!-- LOADER -->
+<div id="loader"><div class="spin"></div><div id="loader-msg">Chargement…</div></div>
+
+<!-- LOGIN -->
+<div id="login" class="off">
+  <div class="lcard">
+    <div class="ltitle">Bad · Nicolas</div>
+    <div class="lsub">Saison 2026 — 27</div>
+    <div class="pdots">
+      <div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div>
+      <div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div>
     </div>
-    <div class="pin-grid">
-      <button class="pin-btn" onclick="pinPress('1')">1</button>
-      <button class="pin-btn" onclick="pinPress('2')">2</button>
-      <button class="pin-btn" onclick="pinPress('3')">3</button>
-      <button class="pin-btn" onclick="pinPress('4')">4</button>
-      <button class="pin-btn" onclick="pinPress('5')">5</button>
-      <button class="pin-btn" onclick="pinPress('6')">6</button>
-      <button class="pin-btn" onclick="pinPress('7')">7</button>
-      <button class="pin-btn" onclick="pinPress('8')">8</button>
-      <button class="pin-btn" onclick="pinPress('9')">9</button>
-      <button class="pin-btn" onclick="pinPress('del')">⌫</button>
-      <button class="pin-btn" onclick="pinPress('0')">0</button>
-      <button class="pin-btn" onclick="pinPress('ok')">OK</button>
+    <div class="ppad">
+      <button class="pkey" onclick="pk('1')">1</button><button class="pkey" onclick="pk('2')">2</button><button class="pkey" onclick="pk('3')">3</button>
+      <button class="pkey" onclick="pk('4')">4</button><button class="pkey" onclick="pk('5')">5</button><button class="pkey" onclick="pk('6')">6</button>
+      <button class="pkey" onclick="pk('7')">7</button><button class="pkey" onclick="pk('8')">8</button><button class="pkey" onclick="pk('9')">9</button>
+      <button class="pkey" onclick="pk('del')">⌫</button><button class="pkey" onclick="pk('0')">0</button><button class="pkey" onclick="pk('ok')">OK</button>
     </div>
-    <div class="pin-error" id="pin-error"></div>
-    <div style="font-size:10px;color:var(--text3);margin-top:12px;line-height:1.6;">
-      Athlète : PIN par défaut <b style="color:var(--green)">1234</b><br>
-      Coach : PIN par défaut <b style="color:var(--blue)">9999</b>
-    </div>
+    <div class="perr" id="perr"></div>
+    <div class="phint">Athlète : <b style="color:var(--green)">1234</b> &nbsp;·&nbsp; Coach : <b style="color:var(--blue)">9999</b></div>
   </div>
 </div>
-<div class="app-wrap" id="app-wrap">
-  <div class="app-header">
-    <h1 class="app-title">Plan Badminton</h1>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span class="role-badge" id="role-badge"></span>
-      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+
+<!-- APP -->
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-title">Bad · Nicolas</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="rpill" id="rpill"></span>
+      <button class="lout" onclick="logout()">⏏</button>
     </div>
   </div>
-  <div class="nav" id="main-nav"></div>
-  <div class="main" id="main-content"></div>
+
+  <div class="content" id="content">
+    <div class="pg on" id="pg-today"></div>
+    <div class="pg" id="pg-plan"></div>
+    <div class="pg" id="pg-log"></div>
+    <div class="pg" id="pg-hist"></div>
+    <div class="pg" id="pg-analyse"></div>
+    <div class="pg" id="pg-disc"></div>
+    <div class="pg" id="pg-coach"></div>
+  </div>
+
+  <nav class="bnav" id="bnav">
+    <button class="ni on" data-pg="today" onclick="goPage('today',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      Auj.
+    </button>
+    <button class="ni" data-pg="plan" onclick="goPage('plan',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Plan
+    </button>
+    <button class="ni" data-pg="log" onclick="goPage('log',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Loguer
+    </button>
+    <button class="ni" data-pg="hist" onclick="goPage('hist',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4"/><polyline points="3 3 3 7 7 7"/></svg>
+      Historique
+    </button>
+    <button class="ni" data-pg="analyse" onclick="goPage('analyse',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Analyse
+    </button>
+    <button class="ni" data-pg="disc" onclick="goPage('disc',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Discussion
+      <span class="nbadge off" id="disc-badge">0</span>
+    </button>
+  </nav>
 </div>
-<div class="modal-overlay hidden" id="modal-session">
+
+<!-- ═══ MODALS ═══ -->
+<!-- Log séance -->
+<div class="ov off" id="ov-sess">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-session')">×</button>
-    <div class="modal-title" id="ms-title">Séance</div>
-    <div class="form-row">
-      <label class="form-label">Statut</label>
-      <div class="status-btns">
-        <button class="status-btn" id="ms-done" onclick="setStatus('done')">✓ Faite</button>
-        <button class="status-btn" id="ms-skipped" onclick="setStatus('skipped')">✕ Supprimée</button>
-        <button class="status-btn" id="ms-moved" onclick="setStatus('moved')">→ Déplacée</button>
-      </div>
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-sess')">×</button>
+    <div class="mtitle" id="ov-sess-title">Séance</div>
+    <div id="ov-sess-ex" style="margin-bottom:12px;"></div>
+    <label class="fl">Statut</label>
+    <div class="srow fr">
+      <button class="sbtn" id="sb-done" onclick="setSt('done')">✓ Faite</button>
+      <button class="sbtn" id="sb-skip" onclick="setSt('skip')">✕ Sautée</button>
+      <button class="sbtn" id="sb-moved" onclick="setSt('moved')">→ Déplacée</button>
     </div>
-    <div class="form-row" id="ms-rpe-row">
-      <label class="form-label">Effort (RPE)</label>
-      <div class="rpe-val" id="ms-rpe-val">6</div>
-      <input type="range" class="rpe-slider" id="ms-rpe" min="1" max="10" value="6" oninput="document.getElementById('ms-rpe-val').textContent=this.value">
-      <div class="rpe-labels"><span>1 très léger</span><span>5 modéré</span><span>10 max</span></div>
+    <div id="rpe-sec">
+      <label class="fl">Effort (RPE)</label>
+      <div class="rvl" id="rvl">6</div>
+      <input type="range" id="rslider" min="1" max="10" value="6" oninput="document.getElementById('rvl').textContent=this.value">
+      <div class="rlbls"><span>1 · repos</span><span>5 · modéré</span><span>10 · max</span></div>
     </div>
-    <div class="form-row">
-      <label class="form-label">Sensations · notes</label>
-      <textarea id="ms-notes" placeholder="Achille OK, bonne énergie..."></textarea>
+    <div class="fr" style="margin-top:10px;">
+      <label class="fl">Notes · sensations</label>
+      <textarea id="snotes" placeholder="Achille OK, bonne énergie, KB 16kg trop léger…"></textarea>
     </div>
-    <button class="btn btn-primary" onclick="saveSessionLog()">Enregistrer</button>
+    <button class="btn bp" onclick="saveLog()">Enregistrer</button>
   </div>
 </div>
-<div class="modal-overlay hidden" id="modal-edit-session">
+
+<!-- Détail séance (lecture) -->
+<div class="ov off" id="ov-detail">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-edit-session')">×</button>
-    <div class="modal-title" id="mes-title">Modifier la séance</div>
-    <input type="hidden" id="mes-date"><input type="hidden" id="mes-idx">
-    <div class="form-row"><label class="form-label">Intitulé</label><input type="text" id="mes-label"></div>
-    <div class="form-row"><label class="form-label">Détail / charge</label><input type="text" id="mes-detail"></div>
-    <div class="form-row">
-      <label class="form-label">Note coach (visible par Nicolas)</label>
-      <textarea id="mes-coach-note" placeholder="Augmenter la charge si RPE < 6..."></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="saveEditSession()">Sauvegarder et pousser</button>
-    <button class="btn btn-danger" style="width:100%;margin-top:6px;" onclick="deleteSession()">Supprimer cette séance</button>
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-detail')">×</button>
+    <div class="mtitle" id="ov-detail-title">Détail séance</div>
+    <div id="ov-detail-body"></div>
+    <button class="btn bp" onclick="openLogFromDetail()" style="margin-top:10px;">Loguer cette séance</button>
+    <button class="btn bg bsm" onclick="openDiscFromDetail()" style="margin-top:6px;width:100%;">💬 Discuter de cette séance</button>
   </div>
 </div>
-<div class="modal-overlay hidden" id="modal-add-session">
+
+<!-- Poids -->
+<div class="ov off" id="ov-poids">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-add-session')">×</button>
-    <div class="modal-title">Ajouter une séance</div>
-    <div class="form-row"><label class="form-label">Date</label><input type="text" id="mas-date" placeholder="2026-09-01"></div>
-    <div class="form-row">
-      <label class="form-label">Type</label>
-      <select id="mas-type" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;">
-        <option value="force">Force</option><option value="kb">Force KB</option>
-        <option value="cardio">Cardio</option><option value="mob">Mobilité</option>
-        <option value="bad">Badminton</option><option value="repos">Repos</option>
-      </select>
-    </div>
-    <div class="form-row"><label class="form-label">Intitulé</label><input type="text" id="mas-label" placeholder="KB Force A · parking"></div>
-    <div class="form-row"><label class="form-label">Détail</label><input type="text" id="mas-detail" placeholder="Swing 16kg + gobelet · 40 min"></div>
-    <button class="btn btn-primary" onclick="addNewSession()">Ajouter au calendrier</button>
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-poids')">×</button>
+    <div class="mtitle">Ajouter une pesée</div>
+    <div class="fr"><label class="fl">Poids (kg)</label><input type="number" id="poids-in" placeholder="85.0" step="0.1"></div>
+    <button class="btn bp" onclick="savePoids()">Enregistrer</button>
   </div>
 </div>
-<div class="modal-overlay hidden" id="modal-message">
+
+<!-- Coach — modifier séance calendrier -->
+<div class="ov off" id="ov-cedit">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-message')">×</button>
-    <div class="modal-title">Message à Nicolas</div>
-    <div class="form-row">
-      <textarea id="msg-text" placeholder="Super semaine ! Pour jeudi, essaie le swing à 20 kg..." style="min-height:100px;"></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="sendMessage()">Envoyer à Nicolas</button>
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-cedit')">×</button>
+    <div class="mtitle" id="ov-cedit-title">Modifier la séance</div>
+    <input type="hidden" id="ced-date"><input type="hidden" id="ced-idx">
+    <div class="fr"><label class="fl">Intitulé</label><input type="text" id="ced-label"></div>
+    <div class="fr"><label class="fl">Détail / charge</label><input type="text" id="ced-detail"></div>
+    <div class="fr"><label class="fl">Note coach (visible par Nicolas)</label><textarea id="ced-note" placeholder="Essaie le swing à 20 kg si le 16 kg te semble léger…"></textarea></div>
+    <button class="btn bp" onclick="saveCalEdit()">Pousser la modification</button>
+    <button class="btn bd" onclick="deleteCalSession()" style="margin-top:6px;">Supprimer cette séance</button>
   </div>
 </div>
+
+<!-- Coach — ajouter séance calendrier -->
+<div class="ov off" id="ov-cadd">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-cadd')">×</button>
+    <div class="mtitle">Ajouter une séance</div>
+    <div class="fr"><label class="fl">Date (YYYY-MM-DD)</label><input type="text" id="cadd-date" placeholder="2026-09-01"></div>
+    <div class="fr"><label class="fl">Type</label>
+      <select id="cadd-type"><option value="force">Force</option><option value="kb">Force KB</option><option value="cardio">Cardio</option><option value="mob">Mobilité</option><option value="bad">Badminton</option><option value="repos">Repos</option></select>
+    </div>
+    <div class="fr"><label class="fl">Intitulé</label><input type="text" id="cadd-label" placeholder="KB Force A · parking"></div>
+    <div class="fr"><label class="fl">Détail</label><input type="text" id="cadd-detail" placeholder="Swing 16kg + gobelet · 40 min"></div>
+    <button class="btn bp" onclick="addCalSession()">Ajouter au calendrier</button>
+  </div>
+</div>
+
+<!-- Coach — éditeur exercices séance type -->
+<div class="ov off" id="ov-exedit">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-exedit')">×</button>
+    <div class="mtitle" id="ov-exedit-title">Modifier la séance type</div>
+    <input type="hidden" id="exed-key">
+    <div class="fr"><label class="fl">Nom de la séance</label><input type="text" id="exed-name"></div>
+    <div class="fr"><label class="fl">Échauffement</label><input type="text" id="exed-warmup"></div>
+    <div id="exed-exercises"></div>
+    <button class="btn bg bsm" onclick="addExercice()" style="margin-bottom:10px;">+ Ajouter un exercice</button>
+    <div class="fr"><label class="fl">Retour au calme</label><input type="text" id="exed-cooldown"></div>
+    <button class="btn bp" onclick="saveExEdit()">Sauvegarder les exercices</button>
+  </div>
+</div>
+
+<!-- Réglages PIN -->
+<div class="ov off" id="ov-settings">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <button class="mclose" onclick="closeOv('ov-settings')">×</button>
+    <div class="mtitle">Réglages PIN</div>
+    <div class="fr"><label class="fl">Nouveau PIN athlète</label><input type="password" id="set-ath" placeholder="4 chiffres"></div>
+    <div class="fr"><label class="fl">Nouveau PIN coach</label><input type="password" id="set-coach" placeholder="4 chiffres"></div>
+    <button class="btn bp" onclick="savePins()">Sauvegarder</button>
+  </div>
+</div>
+
+<script src="garmin.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
